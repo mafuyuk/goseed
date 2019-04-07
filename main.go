@@ -1,35 +1,39 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/mafuyuk/goseed/db"
+	"github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	var dbConf = &db.Config{}
-	flag.StringVar(&dbConf.Host, "h", "0.0.0.0", "DB host.")
-	flag.StringVar(&dbConf.Port, "P", ":3306", "DB port.")
-	flag.StringVar(&dbConf.User, "u", "user", "DB user.")
-	flag.StringVar(&dbConf.Password, "p", "password", "DB password.")
-	flag.StringVar(&dbConf.DBName, "n", "dbname", "DB name.")
+	conf := &mysql.Config{
+		Net:                  "tcp",
+		ParseTime:            true,
+		AllowNativePasswords: true,
+	}
+	flag.StringVar(&conf.User, "user", "", "DB user.")
+	flag.StringVar(&conf.Passwd, "pass", "", "DB password.")
+	flag.StringVar(&conf.Addr, "addr", "0.0.0.0:3306", "DB address.")
+	flag.StringVar(&conf.DBName, "dbname", "", "DB name.")
 
 	var seedDir string
-	flag.StringVar(&seedDir, "d", "_seeds", "seeds directory.")
+	flag.StringVar(&seedDir, "dir", "_seeds", "seeds directory.")
 
 	flag.Parse()
 
 	// initialize DB
-	db, err := db.NewMySQL(dbConf)
+	db, err := sql.Open("mysql", conf.FormatDSN())
 	if err != nil {
 		os.Exit(1)
 	}
 	defer db.Close()
 
-	// Seedディレクトリの取得
+	// get Seed directory
 	seedsDir, err := filepath.Abs(seedDir)
 	if err != nil {
 		os.Exit(2)
