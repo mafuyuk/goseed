@@ -29,6 +29,7 @@ func main() {
 	// initialize DB
 	db, err := sql.Open("mysql", conf.FormatDSN())
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 	defer db.Close()
@@ -36,18 +37,21 @@ func main() {
 	// get Seed directory
 	seedsDir, err := filepath.Abs(seedDir)
 	if err != nil {
-		os.Exit(2)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
 	}
 
 	seed, err := NewSeed(db, seedsDir)
 	if err != nil {
-		os.Exit(3)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
 	}
 
 	fmt.Println("Start seeding")
 	if err := seed.Execute(); err != nil {
-		fmt.Printf("Failed seeding. err: %#v\n", err)
-		os.Exit(4)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
 	}
 	fmt.Println("Success seeding!!")
+	os.Exit(0)
 }
